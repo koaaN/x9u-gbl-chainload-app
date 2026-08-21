@@ -28,18 +28,52 @@ exploit and preload builder is available at
 3. After all three writes pass read-back verification, reboot to recovery /
    fastbootd and manually format data in Recovery.
 
-The broker accepts only `PING`, the fixed three-partition install operation,
-and `STOP`; it does not expose a general root shell. Before success is shown,
-the app reads the exact payload length back from each partition and compares
-it with the staged image. It then stops the broker, removes the preload's
-temporary `su` files, and restores SELinux enforcing. An unused broker also
-expires after 15 minutes.
+The broker exposes only the fixed root, install, uninstall, reboot, and stop
+operations required by the app; it does not expose a general root shell.
+Before success is shown, the app reads the exact payload length back from each
+partition and compares it with the staged image. It removes the preload's
+temporary `su` files and restores SELinux enforcing when the broker stops. An
+unused broker also expires after 15 minutes.
 
-The app does not unlock the Android bootloader, reboot to fastboot, or format
-user data. The preload race can panic or reboot the device, and interrupted
-partition writes can make it unbootable. The native backend repeats the model
-and kernel checks before root and flash operations; the disabled UI buttons
-are not the only guard.
+The app does not unlock the Android bootloader or format user data. The
+preload race can panic or reboot the device, and interrupted partition writes
+can make it unbootable. The native backend repeats the project-ID and kernel
+checks before root and flash operations; the disabled UI buttons are not the
+only guard.
+
+## Unlock the bootloader through GBL
+
+Only continue after the app has successfully installed and verified the GBL
+chainload payloads. Unlocking the bootloader erases all user data. Back up
+anything important before starting.
+
+1. Reboot the phone.
+2. Directly after the phone vibrates during boot, press and hold **Volume Up**
+   to enter the GBL chainload bootloader.
+3. Connect the phone to a computer with Android Platform Tools installed.
+4. Open Command Prompt or a terminal and confirm that fastboot sees it:
+
+   ```text
+   fastboot devices
+   ```
+
+5. Enable OEM unlocking through GBL:
+
+   ```text
+   fastboot oem oem-unlock-toggle
+   ```
+
+6. Start the Android bootloader unlock:
+
+   ```text
+   fastboot flashing unlock
+   ```
+
+7. Confirm the unlock on the phone using its hardware buttons. The phone will
+   erase its user data as part of the unlock process.
+
+The app only installs the GBL chainload path. It never runs either unlock
+command automatically.
 
 ## Supported targets
 
