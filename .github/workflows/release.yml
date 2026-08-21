@@ -1,0 +1,96 @@
+name: Build and publish release
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Release tag matching app version, for example v0.2.1"
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-${{ github.ref }}-${{ inputs.tag || github.ref_name }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    env:
+      X9U_SIGNING_STORE: ${{ runner.temp }}/x9u-signing.jks
+      X9U_SIGNING_STORE_PASSWORD: ${{ secrets.X9U_SIGNING_STORE_PASSWORD }}
+      X9U_SIGNING_KEY_ALIAS: ${{ secrets.X9U_SIGNING_KEY_ALIAS }}
+      X9U_SIGNING_KEY_PASSWORD: ${{ secrets.X9U_SIGNING_KEY_PASSWORD }}
+      GH_TOKEN: ${{ github.token }}
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: gradle
+
+      - name: Install Android SDK packages
+        run: |
+          yes | sdkmanager --licenses >/dev/null || true
+          sdkmanager "platforms;android-36" "build-tools;36.0.0"
+
+      - name: Restore signing key
+        env:
+          X9U_SIGNING_KEYSTORE_BASE64: ${{ secrets.X9U_SIGNING_KEYSTORE_BASE64 }}
+        run: |
+          test -n "$X9U_SIGNING_KEYSTORE_BASE64"
+          printf '%s' "$X9U_SIGNING_KEYSTORE_BASE64" | base64 --decode > "$X9U_SIGNING_STORE"
+          chmod 0600 "$X9U_SIGNING_STORE"
+
+      - name: Validate release tag
+        id: version
+        env:
+          REQUESTED_TAG: ${{ inputs.tag || github.ref_name }}
+        run: |
+          version_name=$(sed -n 's/^[[:space:]]*versionName = "\([^"]*\)"/\1/p' android-app/app/build.gradle.kts)
+          test -n "$version_name"
+          test "$REQUESTED_TAG" = "v$version_name"
+          echo "tag=$REQUESTED_TAG" >> "$GITHUB_OUTPUT"
+          echo "version=$version_name" >> "$GITHUB_OUTPUT"
+          echo "artifact=x9u-root-flasher-v$version_name.apk" >> "$GITHUB_OUTPUT"
+
+      - name: Build release APK
+        run: ./build-app.sh
+
+      - name: Verify release artifact
+        run: |
+          cd dist
+          sha256sum --check SHA256SUMS
+
+      - name: Upload workflow artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: x9u-root-flasher-v${{ steps.version.outputs.version }}
+          path: |
+            dist/${{ steps.version.outputs.artifact }}
+            dist/SHA256SUMS
+          if-no-files-found: error
+
+      - name: Create or update GitHub Release
+        env:
+          RELEASE_TAG: ${{ steps.version.outputs.tag }}
+          RELEASE_APK: dist/${{ steps.version.outputs.artifact }}
+        run: |
+          if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
+            gh release upload "$RELEASE_TAG" "$RELEASE_APK" dist/SHA256SUMS --clobber
+          else
+            gh release create "$RELEASE_TAG" "$RELEASE_APK" dist/SHA256SUMS \
+              --target "$GITHUB_SHA" \
+              --title "X9U GBL Chainload App $RELEASE_TAG" \
+              --generate-notes
+          fi

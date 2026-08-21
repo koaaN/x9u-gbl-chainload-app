@@ -1,0 +1,192 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="color-scheme" content="dark">
+<title>X9 Ultra GBL Chainload</title>
+<style>
+:root{--bg:#080b12;--top:#0e131e;--card:#121725;--card2:#181f2e;--line:#283149;--text:#f4f6fb;--muted:#929db3;--purple:#735cff;--purple2:#b3a9ff;--green:#42dda1;--red:#ff6078;--amber:#f4bd62}
+html.light{--bg:#f3f5fa;--top:#ffffff;--card:#ffffff;--card2:#f0f3f9;--line:#d9dfeb;--text:#172033;--muted:#667188;--purple:#6248e8;--purple2:#6754c5;--green:#16865d;--red:#d83f59;--amber:#9a681b}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}html,body{margin:0;min-height:100%;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,sans-serif}button,input{font:inherit}
+.top{padding:46px 20px 17px;background:var(--top);border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;gap:12px;position:sticky;top:0;z-index:20}.brand{display:flex;align-items:center;gap:12px}.logo{width:45px;height:45px;border-radius:15px;background:linear-gradient(135deg,#866fff,#5541dd);display:grid;place-items:center;box-shadow:0 9px 26px #6049ee44}.logo svg{width:25px;height:25px}.brand h1{font-size:17px;margin:0}.brand p{font-size:10px;color:var(--muted);margin:3px 0 0}.head-state{text-align:right;font-size:10px;font-weight:800;color:var(--muted);max-width:42%}.head-state.good{color:var(--green)}.head-state.bad{color:var(--red)}
+.page{max-width:680px;margin:auto;padding:20px 18px calc(96px + env(safe-area-inset-bottom))}.screen.hidden{display:none}.card{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:20px;margin-bottom:14px;box-shadow:0 12px 35px #0002}.eyebrow{color:var(--purple2);font-size:10px;font-weight:900;letter-spacing:.14em}.title{font-size:24px;font-weight:850;line-height:1.16;margin:8px 0 6px}.subtitle{color:var(--muted);font-size:13px;line-height:1.5;margin:0}.hero-head{display:flex;gap:14px}.hero-icon{width:51px;height:51px;flex:0 0 51px;border-radius:16px;background:#2d2554;color:#c9c1ff;display:grid;place-items:center}.hero-icon svg{width:29px;height:29px}
+.device-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:18px}.detail{padding:11px 12px;background:var(--card2);border:1px solid var(--line);border-radius:12px;min-width:0}.detail small{display:block;color:var(--muted);font-size:9px;font-weight:850;letter-spacing:.09em}.detail strong{display:block;margin-top:4px;font:750 11px/1.25 monospace;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.detail.wide{grid-column:1/-1}.detail.good strong{color:var(--green)}.detail.bad strong{color:var(--red)}
+.steps{margin-top:17px;border:1px solid var(--line);border-radius:15px;overflow:hidden}.step{display:flex;gap:12px;align-items:center;padding:14px;background:var(--card2)}.step+.step{border-top:1px solid var(--line)}.num{width:30px;height:30px;flex:0 0 30px;border-radius:10px;background:#2d2554;color:#c9c1ff;display:grid;place-items:center;font-weight:900;font-size:12px}.step.done .num{background:#164b39;color:var(--green)}.step b,.step small{display:block}.step b{font-size:14px}.step small{font-size:11px;color:var(--muted);margin-top:3px}.mark{margin-left:auto;color:var(--muted);font-size:18px}.step.done .mark{color:var(--green)}
+.button{width:100%;border:1px solid #34405d;border-radius:14px;padding:15px 16px;background:#20283a;color:var(--text);font-weight:850;font-size:15px;margin-top:10px}.button.primary{background:var(--purple);border-color:transparent;box-shadow:0 9px 25px #735cff35}.button.danger{background:#592234;border-color:#7b3048;color:#ffc0ca}.button.success{background:#126447;border-color:#269c73}.button:disabled{opacity:.42}.button:active{filter:brightness(1.16)}
+.warning{border-color:#6b4d21;background:#241c12}.warning .eyebrow{color:var(--amber)}.warning p{color:#d6bc90;font-size:12px;line-height:1.5;margin:9px 0 0}.flash-info{display:grid;gap:8px;margin-top:15px}.payload{display:flex;justify-content:space-between;gap:12px;padding:11px 12px;border:1px solid var(--line);border-radius:12px;background:var(--card2)}.payload span{font-size:12px;font-weight:750}.payload code{font-size:10px;color:var(--muted)}
+.next{display:none;border-color:#269c73;background:#103a2d}.next.show{display:block}.next .title{color:#76e8bb}.commands{padding:13px;border-radius:12px;background:#071d16;border:1px solid #267657;color:#bdf5df;font:12px/1.65 monospace;white-space:pre-wrap;margin-top:13px}.next p{color:#acd8c8;font-size:13px;line-height:1.5}
+.log-card{padding:17px}.log-head{display:flex;justify-content:space-between;align-items:center}.log-head button{border:1px solid var(--line);border-radius:10px;padding:8px 11px;background:var(--card2);color:var(--muted);font-size:11px;font-weight:800}.log{margin:12px 0 0;max-height:260px;overflow:auto;padding:13px;border-radius:12px;background:#070a10;border:1px solid #1f2738;color:#b9c3d8;font:11px/1.5 monospace;white-space:pre-wrap;word-break:break-word}.log:empty:before{content:'No operation log yet.';color:#657087}
+.light .log{background:#f5f7fb;border-color:#d9dfeb;color:#3d485d}.setting-row{display:flex;align-items:center;justify-content:space-between;gap:18px;padding:5px 0}.setting-row strong,.setting-row small{display:block}.setting-row strong{font-size:15px}.setting-row small{margin-top:4px;color:var(--muted);font-size:11px;line-height:1.4}.switch{position:relative;flex:0 0 49px;width:49px;height:29px}.switch input{position:absolute;opacity:0}.switch span{position:absolute;inset:0;border-radius:99px;background:#394258;transition:.2s}.switch span:after{content:'';position:absolute;width:23px;height:23px;left:3px;top:3px;border-radius:50%;background:#fff;box-shadow:0 2px 7px #0004;transition:.2s}.switch input:checked+span{background:var(--purple)}.switch input:checked+span:after{transform:translateX(20px)}.about-list{margin-top:15px;border:1px solid var(--line);border-radius:14px;overflow:hidden}.about-row{padding:13px;background:var(--card2)}.about-row+.about-row{border-top:1px solid var(--line)}.about-row small,.about-row strong{display:block}.about-row small{font-size:9px;color:var(--muted);font-weight:850;letter-spacing:.08em}.about-row strong{font-size:12px;margin-top:5px;line-height:1.45;word-break:break-word}.about-note{color:var(--muted);font-size:12px;line-height:1.55;margin:14px 0 0}.about-note strong{color:var(--text)}.about-links{display:grid;gap:8px;margin-top:14px}.about-link{width:100%;border:1px solid var(--line);border-radius:13px;padding:12px 13px;background:var(--card2);color:var(--text);display:flex;align-items:center;gap:11px;text-align:left}.about-link svg{width:21px;height:21px;flex:0 0 21px;color:var(--purple2)}.about-link span{min-width:0;flex:1}.about-link b,.about-link small{display:block}.about-link b{font-size:13px}.about-link small{margin-top:3px;color:var(--muted);font-size:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.chevron{flex:0 0 auto;color:var(--muted);font-size:24px}.nav{position:fixed;bottom:0;left:0;right:0;z-index:30;background:#0e131ef2;border-top:1px solid var(--line);display:flex;justify-content:space-around;padding:9px 10px calc(9px + env(safe-area-inset-bottom));backdrop-filter:blur(14px)}.nav button{min-width:76px;border:0;border-radius:14px;padding:8px 18px;background:transparent;color:var(--muted);display:grid;justify-items:center;gap:3px;font-size:10px;font-weight:750}.nav svg{width:25px;height:25px}.nav button.on{background:#2b234f;color:#fff}.light .nav{background:#fffffff2}.light .nav button.on{background:#ddd6ff;color:#4c3cc4}
+.busy{position:fixed;inset:0;z-index:100;display:none;align-items:center;justify-content:center;background:#05070ccc}.busy.show{display:flex}.busy-box{display:flex;align-items:center;gap:13px;padding:17px 20px;border:1px solid #5140a5;border-radius:15px;background:#17152b;font-size:14px;font-weight:800}.spin{width:24px;height:24px;border:3px solid #c2baff;border-right-color:transparent;border-radius:50%;animation:spin .7s linear infinite}@keyframes spin{to{transform:rotate(360deg)}}
+.dialog{position:fixed;inset:0;z-index:90;display:none;align-items:flex-end;justify-content:center;padding:18px;background:#000b}.dialog.show{display:flex}.sheet{width:100%;max-width:520px;padding:22px;border:1px solid var(--line);border-radius:22px;background:var(--card);box-shadow:0 18px 55px #000b}.sheet-icon{width:49px;height:49px;border-radius:15px;background:#552334;color:#ff9bad;display:grid;place-items:center}.sheet-icon svg{width:28px}.sheet h2{font-size:22px;margin:16px 0 8px}.sheet p{color:var(--muted);font-size:13px;line-height:1.5}.confirm{width:100%;margin-top:10px;padding:14px;border:1px solid #743046;border-radius:13px;background:#0c1019;color:var(--text);font-weight:900;letter-spacing:.14em;text-transform:uppercase;outline:0}.actions{display:flex;gap:8px;margin-top:16px}.actions .button{margin:0}.actions .button:first-child{width:38%}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="brand"><div class="logo"><svg viewBox="0 0 24 24"><path d="M5 14h14M8 10V6h8v4M7 14v5m10-5v5M4 19h16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M12 2v4m-2-2h4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></div><div><h1>X9 Ultra GBL Chainload</h1><p>Temporary root · ABL · EFISP</p></div></div>
+  <div id="headState" class="head-state">Reading phone…</div>
+</header>
+
+<main class="page">
+<section id="installScreen" class="screen">
+  <section class="card">
+    <div class="hero-head"><div class="hero-icon"><svg viewBox="0 0 24 24"><path d="M7 11V8a5 5 0 0 1 9.8-1.4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><rect x="4" y="11" width="16" height="10" rx="2.5" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M12 15v3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></div><div><div class="eyebrow">OPPO FIND X9 ULTRA</div><div class="title">Temporary root + GBL chainload</div><p class="subtitle">Obtain temporary root and install the supplied GBL chainload path. This does not unlock the Android bootloader or format user data.</p></div></div>
+    <div class="device-grid">
+      <div id="modelDetail" class="detail"><small>MODEL</small><strong id="model">—</strong></div>
+      <div id="projectDetail" class="detail"><small>PROJECT ID</small><strong id="project">—</strong></div>
+      <div id="firmwareDetail" class="detail wide"><small>FIRMWARE</small><strong id="firmware">—</strong></div>
+      <div id="kernelDetail" class="detail wide"><small>KERNEL</small><strong id="kernel">—</strong></div>
+    </div>
+  </section>
+
+  <section class="card">
+    <div class="eyebrow">INSTALL SEQUENCE</div>
+    <div class="title">Two guarded steps</div>
+    <div class="steps">
+      <div id="rootStep" class="step"><span class="num">1</span><span><b>Temporary root</b><small>Run the embedded preload and verify uid=0</small></span><span class="mark">○</span></div>
+      <div id="flashStep" class="step"><span class="num">2</span><span><b>Install GBL chainload</b><small>Write ABL to both slots and the EFI to efisp</small></span><span class="mark">○</span></div>
+    </div>
+    <button id="rootButton" class="button primary" onclick="enableRoot('log')">Enable temporary root</button>
+    <button id="flashButton" class="button danger" disabled onclick="openFlashDialog()">Flash supplied images</button>
+  </section>
+
+  <section id="nextCard" class="card next">
+    <div class="eyebrow">GBL CHAINLOAD INSTALLED</div>
+    <div class="title">Reboot and format data</div>
+    <p>The ABL payload and EFISP were read-back verified. Reboot to recovery / fastbootd, enter Recovery mode, and choose <b>Format data</b>. Formatting data permanently erases all apps and user files.</p>
+    <button id="installRebootButton" class="button primary" disabled onclick="rebootFastboot('log')">Reboot to recovery / fastbootd</button>
+    <div class="commands">ADB fallback: adb reboot fastboot</div>
+  </section>
+
+  <section class="card log-card">
+    <div class="log-head"><div><div class="eyebrow">OPERATION LOG</div></div><button onclick="copyLog()">Copy</button></div>
+    <pre id="log" class="log"></pre>
+  </section>
+</section>
+
+<section id="uninstallScreen" class="screen hidden">
+  <section class="card">
+    <div class="hero-head"><div class="hero-icon"><svg viewBox="0 0 24 24"><path d="M5 7h14M9 7V4h6v3m-8 0 1 14h8l1-14M10 11v6m4-6v6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div><div class="eyebrow">REMOVE GBL CHAINLOAD</div><div class="title">Erase EFISP payload</div><p class="subtitle">Obtain temporary root and replace EFISP with the supplied verified empty image. ABL is not changed.</p></div></div>
+  </section>
+
+  <section class="card">
+    <div class="eyebrow">UNINSTALL SEQUENCE</div>
+    <div class="title">Two guarded steps</div>
+    <div class="steps">
+      <div id="uninstallRootStep" class="step"><span class="num">1</span><span><b>Temporary root</b><small>Run the embedded preload and verify uid=0</small></span><span class="mark">○</span></div>
+      <div id="uninstallFlashStep" class="step"><span class="num">2</span><span><b>Erase EFISP payload</b><small>Write and read-back verify the empty efisp.img</small></span><span class="mark">○</span></div>
+    </div>
+    <button id="uninstallRootButton" class="button primary" onclick="enableRoot('uninstallLog')">Enable temporary root</button>
+    <button id="uninstallButton" class="button danger" disabled onclick="openUninstallDialog()">Flash empty efisp.img</button>
+  </section>
+
+  <section id="recoveryCard" class="card next">
+    <div class="eyebrow">EFISP ERASED AND VERIFIED</div>
+    <div class="title">Reboot and format data</div>
+    <p>Reboot to recovery / fastbootd. From there, enter Recovery mode and choose <b>Format data</b>, then confirm the wipe. Formatting data permanently erases all apps and user files.</p>
+    <button id="rebootButton" class="button primary" disabled onclick="rebootFastboot()">Reboot to recovery / fastbootd</button>
+    <div class="commands">ADB fallback: adb reboot fastboot</div>
+  </section>
+
+  <section class="card log-card">
+    <div class="log-head"><div><div class="eyebrow">UNINSTALL LOG</div></div><button onclick="copyLog('uninstallLog')">Copy</button></div>
+    <pre id="uninstallLog" class="log"></pre>
+  </section>
+</section>
+
+<section id="settingsScreen" class="screen hidden">
+  <section class="card">
+    <div class="eyebrow">SETTINGS</div>
+    <div class="title">Appearance</div>
+    <div class="setting-row">
+      <div><strong>Light mode</strong><small>Use a light interface and matching system bars</small></div>
+      <label class="switch"><input id="lightMode" type="checkbox" onchange="setLightMode(this.checked)"><span></span></label>
+    </div>
+  </section>
+  <section class="card">
+    <div class="eyebrow">ABOUT</div>
+    <div class="title">X9 Ultra GBL Chainload</div>
+    <p class="about-note">Two-step temporary-root and GBL-chainload installer. It does not unlock the Android bootloader or format user data.</p>
+    <div class="about-list">
+      <div class="about-row"><small>VERSION</small><strong>0.2.1</strong></div>
+      <div class="about-row"><small>SUPPORTED PROJECT IDS</small><strong>25021 · 25022 · 25211</strong></div>
+      <div class="about-row"><small>KNOWN MODEL LABELS</small><strong>PMA110 · PMA120 · CPH2841<br><span style="color:var(--muted);font-size:11px">Informational only; firmware may change the model label.</span></strong></div>
+      <div class="about-row"><small>KERNEL TARGET</small><strong>6.12.58-android16-6-g7704a1ae279b-ab15213644-4k</strong></div>
+    </div>
+  </section>
+  <section class="card">
+    <div class="eyebrow">CREATOR &amp; PROJECT</div>
+    <div class="title">Links</div>
+    <div class="about-links">
+      <button class="about-link" onclick="openGitHub('https://github.com/koaaN')"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M4.5 20a7.5 7.5 0 0 1 15 0" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg><span><b>koaaN on GitHub</b><small>Creator</small></span><span class="chevron">›</span></button>
+      <button class="about-link" onclick="openGitHub('https://github.com/koaaN/x9u-preload-builder')"><svg viewBox="0 0 24 24"><path d="M9.5 14.5 14.5 9M7.2 16.8l-1.4 1.4a3.4 3.4 0 0 1-4.8-4.8l3.2-3.2A3.4 3.4 0 0 1 9 10m6-1a3.4 3.4 0 0 1 4.8 4.8L16.6 17a3.4 3.4 0 0 1-4.8 0" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg><span><b>CVE-2026-43499 exploit</b><small>koaaN/x9u-preload-builder</small></span><span class="chevron">›</span></button>
+    </div>
+  </section>
+</section>
+</main>
+
+<nav class="nav">
+  <button class="on" onclick="showScreen('installScreen',this)"><svg viewBox="0 0 24 24"><path d="M5 14h14M8 10V6h8v4M7 14v5m10-5v5M4 19h16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M12 2v4m-2-2h4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg><span>Install</span></button>
+  <button onclick="showScreen('uninstallScreen',this)"><svg viewBox="0 0 24 24"><path d="M5 7h14M9 7V4h6v3m-8 0 1 14h8l1-14M10 11v6m4-6v6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Uninstall</span></button>
+  <button onclick="showScreen('settingsScreen',this)"><svg viewBox="0 0 24 24"><path d="M5 7h14M8 12h11M5 17h14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><circle cx="8" cy="7" r="2" fill="var(--top)" stroke="currentColor" stroke-width="1.6"/><circle cx="15" cy="12" r="2" fill="var(--top)" stroke="currentColor" stroke-width="1.6"/><circle cx="10" cy="17" r="2" fill="var(--top)" stroke="currentColor" stroke-width="1.6"/></svg><span>Settings</span></button>
+</nav>
+
+<div id="busy" class="busy"><div class="busy-box"><span class="spin"></span><span id="busyText">Working…</span></div></div>
+
+<div id="flashDialog" class="dialog">
+  <div class="sheet">
+    <div class="sheet-icon"><svg viewBox="0 0 24 24"><path d="M12 3 21 20H3z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M12 9v5m0 3h.01" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></div>
+    <h2>Install GBL chainload?</h2>
+    <p>This writes <b>abl.img</b> to both ABL slots and <b>installed-mode2.efi</b> to EFISP. Type <b>FLASH</b> to enable the final button.</p>
+    <input id="phrase" class="confirm" maxlength="5" placeholder="FLASH" oninput="validatePhrase()">
+    <div class="actions"><button class="button" onclick="closeFlashDialog()">Cancel</button><button id="confirmFlash" class="button danger" disabled onclick="flashImages()">Flash now</button></div>
+  </div>
+</div>
+
+<div id="uninstallDialog" class="dialog">
+  <div class="sheet">
+    <div class="sheet-icon"><svg viewBox="0 0 24 24"><path d="M12 3 21 20H3z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M12 9v5m0 3h.01" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></div>
+    <h2>Erase the EFISP payload?</h2>
+    <p>This writes the packaged all-zero <b>efisp.img</b> to the <b>efisp</b> partition. Type <b>ERASE</b> to enable the final button.</p>
+    <input id="erasePhrase" class="confirm" maxlength="5" placeholder="ERASE" oninput="validateErasePhrase()">
+    <div class="actions"><button class="button" onclick="closeUninstallDialog()">Cancel</button><button id="confirmUninstall" class="button danger" disabled onclick="uninstallImages()">Erase EFISP</button></div>
+  </div>
+</div>
+
+<script>
+let callbackId=0,rootReady=false,flashDone=localStorage.getItem('x9uFlashDone')==='1',uninstallDone=localStorage.getItem('x9uUninstallDone')==='1';
+const byId=id=>document.getElementById(id);
+function parse(v){try{return JSON.parse(v)}catch(e){return{ok:false,message:'Invalid app response',log:String(v)}}}
+function callback(fn){const n='x9uCb'+(++callbackId);window[n]=v=>{try{fn(parse(v))}finally{delete window[n]}};return n}
+function busy(on,text='Working…'){byId('busyText').textContent=text;byId('busy').classList.toggle('show',on)}
+function appendLog(title,result,target='log'){const e=byId(target),lines=['['+new Date().toLocaleTimeString()+'] '+title,result.message||''];if(result.log)lines.push(result.log);e.textContent+=(e.textContent?'\n\n':'')+lines.filter(Boolean).join('\n');e.scrollTop=e.scrollHeight}
+function done(id,on){const e=byId(id);e.classList.toggle('done',on);e.querySelector('.mark').textContent=on?'✓':'○'}
+function updateButtons(){const compatible=device.supported&&device.kernelCompatible;byId('flashButton').disabled=!rootReady||!compatible||flashDone||uninstallDone;byId('rootButton').disabled=rootReady||!compatible||uninstallDone;byId('rootButton').textContent=uninstallDone?'Uninstall pending reboot':(rootReady?'Temporary root available':(flashDone?'Enable root for reboot':'Enable temporary root'));byId('installRebootButton').disabled=!rootReady||!compatible||!flashDone;done('rootStep',compatible&&(rootReady||flashDone));done('flashStep',flashDone);byId('nextCard').classList.toggle('show',flashDone);byId('uninstallRootButton').disabled=rootReady||!compatible;byId('uninstallRootButton').textContent=rootReady?'Temporary root available':(uninstallDone?'Enable root for reboot':'Enable temporary root');byId('uninstallButton').disabled=!rootReady||!compatible||uninstallDone;byId('rebootButton').disabled=!rootReady||!compatible||!uninstallDone;done('uninstallRootStep',compatible&&(rootReady||uninstallDone));done('uninstallFlashStep',uninstallDone);byId('recoveryCard').classList.toggle('show',uninstallDone)}
+function setStatus(result){rootReady=!!result.root&&device.supported&&device.kernelCompatible;if(result.installReady){flashDone=true;uninstallDone=false;localStorage.setItem('x9uFlashDone','1');localStorage.removeItem('x9uUninstallDone')}if(result.uninstallReady){uninstallDone=true;flashDone=false;localStorage.setItem('x9uUninstallDone','1');localStorage.removeItem('x9uFlashDone')}updateButtons()}
+function enableRoot(target='log'){busy(true,'Running temporary-root chain…');X9U.enableRoot(callback(r=>{busy(false);appendLog('Temporary root',r,target);rootReady=!!r.root;updateButtons()}))}
+function openFlashDialog(){byId('phrase').value='';validatePhrase();byId('flashDialog').classList.add('show')}
+function closeFlashDialog(){byId('flashDialog').classList.remove('show')}
+function validatePhrase(){byId('confirmFlash').disabled=byId('phrase').value!=='FLASH'}
+function flashImages(){if(byId('phrase').value!=='FLASH')return;closeFlashDialog();busy(true,'Flashing and verifying abl_a, abl_b, and efisp…');X9U.flash('FLASH',callback(r=>{busy(false);appendLog('Partition flash',r);rootReady=!!r.root;if(r.flashed){flashDone=true;uninstallDone=false;localStorage.setItem('x9uFlashDone','1');localStorage.removeItem('x9uUninstallDone')}updateButtons()}))}
+function openUninstallDialog(){byId('erasePhrase').value='';validateErasePhrase();byId('uninstallDialog').classList.add('show')}
+function closeUninstallDialog(){byId('uninstallDialog').classList.remove('show')}
+function validateErasePhrase(){byId('confirmUninstall').disabled=byId('erasePhrase').value!=='ERASE'}
+function uninstallImages(){if(byId('erasePhrase').value!=='ERASE')return;closeUninstallDialog();busy(true,'Erasing and verifying efisp…');X9U.uninstall('ERASE',callback(r=>{busy(false);appendLog('EFISP uninstall',r,'uninstallLog');rootReady=!!r.root;if(r.uninstalled){uninstallDone=true;flashDone=false;localStorage.setItem('x9uUninstallDone','1');localStorage.removeItem('x9uFlashDone')}updateButtons()}))}
+function rebootFastboot(target='uninstallLog'){busy(true,'Rebooting to recovery / fastbootd…');X9U.rebootFastboot(callback(r=>{busy(false);appendLog('Recovery / fastbootd reboot',r,target)}))}
+function copyLog(target='log'){X9U.copy(byId(target).textContent)}
+function openGitHub(url){X9U.openUrl(url)}
+function showScreen(id,button){document.querySelectorAll('.screen').forEach(x=>x.classList.add('hidden'));byId(id).classList.remove('hidden');document.querySelectorAll('.nav button').forEach(x=>x.classList.remove('on'));button.classList.add('on');window.scrollTo(0,0)}
+function setLightMode(on){document.documentElement.classList.toggle('light',on);localStorage.setItem('x9uLightMode',on?'1':'0');X9U.setLightMode(on)}
+
+const initialLight=localStorage.getItem('x9uLightMode')==='1';byId('lightMode').checked=initialLight;setLightMode(initialLight);
+
+const device=parse(X9U.deviceInfo());
+byId('model').textContent=device.model||'Unknown';byId('project').textContent=device.projectId||'Unknown';byId('firmware').textContent=device.firmware||'Unknown';byId('kernel').textContent=device.kernel||'Unknown';
+byId('modelDetail').classList.add(device.supported?'good':'bad');byId('projectDetail').classList.add(device.supported?'good':'bad');byId('kernelDetail').classList.add(device.kernelCompatible?'good':'bad');
+byId('headState').textContent=device.supported?(device.kernelCompatible?'X9 Ultra · compatible kernel':'Kernel mismatch'):'Unsupported target';byId('headState').classList.add(device.supported&&device.kernelCompatible?'good':'bad');
+updateButtons();
+busy(true,'Checking temporary root…');X9U.status(callback(r=>{busy(false);setStatus(r);if(!r.preloadOk)appendLog('Payload verification',r)}));
+</script>
+</body>
+</html>
