@@ -1,5 +1,7 @@
 # X9 Ultra GBL Chainload
 
+![X9 Ultra GBL Chainload app](assets/x9u-gbl-chainload-banner.png)
+
 Standalone Android app for the OPPO Find X9 Ultra. It packages the validated
 temporary-root `preload.so` and the two separately supplied GBL chainload
 payloads. It writes those payloads directly and contains no `unlocker` binary.
