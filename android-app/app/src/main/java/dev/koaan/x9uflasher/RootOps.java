@@ -22,6 +22,8 @@ final class RootOps {
     private static final String CPH2841_PROJECT_ID = "25211";
     private static final String EXPECTED_KERNEL =
             "6.12.58-android16-6-g7704a1ae279b-ab15213644-4k";
+    private static final String CVE_98260_KERNEL =
+            "6.12.69-android16-6-g242e1a07f878-ab15865446-4k";
 
     private static final String BROKER_ASSET = "x9u-root-broker.sh";
     private static final String BROKER_SCRIPT = ".x9u_root_broker.sh";
@@ -38,6 +40,10 @@ final class RootOps {
             "4ad7f1db0c92f0a358e28bf18170a20533011299827d8d9a25cffd2218f1415d";
     private static final String EFI_SHA256 =
             "35560f8e6fd706a3768f26f692467491c90425881a8d80bf237341215c04cac5";
+    private static final String CVE_EFI_SHA256 =
+            "7e696c2af4da1327d8fab4f1b72a4a1e11a9e1983d0c9342909f1639e6b6adc2";
+    private static final String CVE_EFI_ASSET =
+            "CPH2841_17.0.0.101-mode2-fb.efi";
     private static final String EMPTY_EFISP_SHA256 =
             "bbd05cf6097ac9b1f89ea29d2542c1b7b67ee46848393895f5a9e43fa1f621e5";
 
@@ -54,7 +60,7 @@ final class RootOps {
         }
     }
 
-    private static final class BrokerResult {
+    static final class BrokerResult {
         final int code;
         final String message;
         final String log;
@@ -161,6 +167,14 @@ final class RootOps {
                 || CPH2841_PROJECT_ID.equals(normalizedProject);
     }
 
+    private static boolean cve98260Kernel() {
+        return CVE_98260_KERNEL.equals(kernel());
+    }
+
+    private static boolean supportedKernel(String release) {
+        return EXPECTED_KERNEL.equals(release) || CVE_98260_KERNEL.equals(release);
+    }
+
     private static String compatibilityProblem() {
         String model = Build.MODEL == null ? "" : Build.MODEL.trim();
         String project = projectId();
@@ -170,7 +184,7 @@ final class RootOps {
                     + " (reported model: " + model + ")";
         }
         String release = kernel();
-        if (!EXPECTED_KERNEL.equals(release)) {
+        if (!supportedKernel(release)) {
             return "Kernel mismatch: " + release;
         }
         return null;
@@ -189,7 +203,11 @@ final class RootOps {
                     .put("firmware", firmware())
                     .put("kernel", release)
                     .put("supported", supportedProject(project))
-                    .put("kernelCompatible", EXPECTED_KERNEL.equals(release))
+                    .put("kernelCompatible", supportedKernel(release))
+                    .put("legacyKernelCompatible", EXPECTED_KERNEL.equals(release))
+                    .put("flashCompatible",
+                            supportedProject(project) && supportedKernel(release))
+                    .put("cve98260Compatible", CVE_98260_KERNEL.equals(release))
                     .put("preloadPresent", preload.isFile())
                     .toString();
         } catch (Throwable error) {
@@ -238,6 +256,9 @@ final class RootOps {
 
     private static synchronized BrokerResult brokerCommand(
             Context context, String operation, long timeoutMs) throws Exception {
+        if (cve98260Kernel()) {
+            return ShizukuOps.brokerCommand(operation, timeoutMs);
+        }
         File home = context.getFilesDir();
         File ready = new File(home, BROKER_READY);
         long deadline = System.currentTimeMillis() + timeoutMs;
@@ -293,6 +314,7 @@ final class RootOps {
     }
 
     private static boolean uninstallReady(Context context) {
+        if (cve98260Kernel()) return ShizukuOps.uninstallReady();
         File marker = new File(context.getFilesDir(), UNINSTALL_READY);
         try {
             return marker.isFile() && "UNINSTALL_VERIFY_OK".equals(readText(marker).trim());
@@ -302,6 +324,7 @@ final class RootOps {
     }
 
     private static boolean installReady(Context context) {
+        if (cve98260Kernel()) return ShizukuOps.installReady();
         File marker = new File(context.getFilesDir(), INSTALL_READY);
         try {
             return marker.isFile() && "INSTALL_VERIFY_OK".equals(readText(marker).trim());
@@ -314,15 +337,18 @@ final class RootOps {
         try {
             File preload = preloadFile(context);
             String preloadHash = preload.isFile() ? sha256(preload) : "missing";
+            boolean cveBackend = cve98260Kernel();
             return new JSONObject()
                     .put("ok", true)
                     .put("root", rootAvailable(context))
                     .put("installReady", installReady(context))
                     .put("uninstallReady", uninstallReady(context))
-                    .put("preloadOk", PRELOAD_SHA256.equals(preloadHash))
+                    .put("preloadOk", cveBackend || PRELOAD_SHA256.equals(preloadHash))
                     .put("preloadHash", preloadHash)
+                    .put("backend", cveBackend ? "cve-2026-98260" : "preload")
                     .put("ablHash", ABL_SHA256)
                     .put("efiHash", EFI_SHA256)
+                    .put("cveEfiHash", CVE_EFI_SHA256)
                     .put("emptyEfispHash", EMPTY_EFISP_SHA256)
                     .toString();
         } catch (Throwable error) {
@@ -336,6 +362,10 @@ final class RootOps {
             if (problem != null) {
                 return response(false, problem + "; nothing was run.", "")
                         .put("root", false).toString();
+            }
+
+            if (cve98260Kernel()) {
+                return ShizukuOps.enableRoot(context);
             }
 
             BrokerResult existing = brokerCommand(context, "PING", 500L);
@@ -441,8 +471,13 @@ final class RootOps {
             }
             brokerConfirmed = true;
 
-            extractAsset(context, "abl.img", ABL_SHA256);
-            extractAsset(context, "installed-mode2.efi", EFI_SHA256);
+            if (cve98260Kernel()) {
+                ShizukuOps.stagePayload(context, "abl.img", ABL_SHA256);
+                ShizukuOps.stagePayload(context, CVE_EFI_ASSET, CVE_EFI_SHA256);
+            } else {
+                extractAsset(context, "abl.img", ABL_SHA256);
+                extractAsset(context, "installed-mode2.efi", EFI_SHA256);
+            }
             flashResult = brokerCommand(context, "FLASH", 300000L);
             if (flashResult == null) {
                 operationTimedOut = true;
@@ -498,7 +533,11 @@ final class RootOps {
             }
             brokerConfirmed = true;
 
-            extractAsset(context, "efisp.img", EMPTY_EFISP_SHA256);
+            if (cve98260Kernel()) {
+                ShizukuOps.stagePayload(context, "efisp.img", EMPTY_EFISP_SHA256);
+            } else {
+                extractAsset(context, "efisp.img", EMPTY_EFISP_SHA256);
+            }
             uninstallResult = brokerCommand(context, "UNINSTALL", 300000L);
             if (uninstallResult == null) {
                 operationTimedOut = true;

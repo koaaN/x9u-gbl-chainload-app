@@ -12,8 +12,8 @@ android {
         applicationId = "dev.koaan.x9uflasher"
         minSdk = 29
         targetSdk = 36
-        versionCode = 201
-        versionName = "0.2.1"
+        versionCode = 304
+        versionName = "0.3.4"
     }
 
     packaging {
@@ -46,4 +46,6 @@ android {
 }
 
 dependencies {
+    implementation("dev.rikka.shizuku:api:13.1.5")
+    implementation("dev.rikka.shizuku:provider:13.1.5")
 }

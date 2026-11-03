@@ -11,6 +11,8 @@ if [[ -z "$version_name" ]]; then
 fi
 artifact="x9u-root-flasher-v${version_name}.apk"
 
+"$project_dir/build-cve98260.sh"
+
 ANDROID_HOME="$sdk_root" \
   "$project_dir/android-app/gradlew" -p "$project_dir/android-app" :app:assembleRelease
 

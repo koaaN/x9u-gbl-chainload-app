@@ -44,7 +44,7 @@ html.light{--bg:#f3f5fa;--top:#ffffff;--card:#ffffff;--card2:#f0f3f9;--line:#d9d
     <div class="eyebrow">INSTALL SEQUENCE</div>
     <div class="title">Two guarded steps</div>
     <div class="steps">
-      <div id="rootStep" class="step"><span class="num">1</span><span><b>Temporary root</b><small>Run the embedded preload and verify uid=0</small></span><span class="mark">○</span></div>
+      <div id="rootStep" class="step"><span class="num">1</span><span><b>Temporary root</b><small id="rootBackendText">Run the exact-kernel backend and verify uid=0</small></span><span class="mark">○</span></div>
       <div id="flashStep" class="step"><span class="num">2</span><span><b>Install GBL chainload</b><small>Write ABL to both slots and the EFI to efisp</small></span><span class="mark">○</span></div>
     </div>
     <button id="rootButton" class="button primary" onclick="enableRoot('log')">Enable temporary root</button>
@@ -74,7 +74,7 @@ html.light{--bg:#f3f5fa;--top:#ffffff;--card:#ffffff;--card2:#f0f3f9;--line:#d9d
     <div class="eyebrow">UNINSTALL SEQUENCE</div>
     <div class="title">Two guarded steps</div>
     <div class="steps">
-      <div id="uninstallRootStep" class="step"><span class="num">1</span><span><b>Temporary root</b><small>Run the embedded preload and verify uid=0</small></span><span class="mark">○</span></div>
+      <div id="uninstallRootStep" class="step"><span class="num">1</span><span><b>Temporary root</b><small id="uninstallRootBackendText">Run the exact-kernel backend and verify uid=0</small></span><span class="mark">○</span></div>
       <div id="uninstallFlashStep" class="step"><span class="num">2</span><span><b>Erase EFISP payload</b><small>Write and read-back verify the empty efisp.img</small></span><span class="mark">○</span></div>
     </div>
     <button id="uninstallRootButton" class="button primary" onclick="enableRoot('uninstallLog')">Enable temporary root</button>
@@ -96,6 +96,18 @@ html.light{--bg:#f3f5fa;--top:#ffffff;--card:#ffffff;--card2:#f0f3f9;--line:#d9d
 </section>
 
 <section id="settingsScreen" class="screen hidden">
+  <section class="card warning">
+    <div class="eyebrow">KERNEL RESEARCH</div>
+    <div class="title">CVE-2026-98260 precheck</div>
+    <p>This read-only check runs as Android's shell user through Shizuku. It validates the exact 6.12.69 profile and tracefs prerequisites; it does not trigger the UAF, obtain root, or enable flashing.</p>
+    <div class="about-list">
+      <div class="about-row"><small>PROFILE</small><strong>6.12.69-android16-6-g242e1a07f878-ab15865446-4k</strong></div>
+      <div class="about-row"><small>SHIZUKU</small><strong id="shizukuState">Checking…</strong></div>
+    </div>
+    <button id="shizukuButton" class="button" onclick="requestShizuku()">Grant Shizuku permission</button>
+    <button id="cveCheckButton" class="button primary" onclick="checkCve98260()">Run safe profile precheck</button>
+    <pre id="cveLog" class="log"></pre>
+  </section>
   <section class="card">
     <div class="eyebrow">SETTINGS</div>
     <div class="title">Appearance</div>
@@ -109,10 +121,11 @@ html.light{--bg:#f3f5fa;--top:#ffffff;--card:#ffffff;--card2:#f0f3f9;--line:#d9d
     <div class="title">X9 Ultra GBL Chainload</div>
     <p class="about-note">Two-step temporary-root and GBL-chainload installer. It does not unlock the Android bootloader or format user data.</p>
     <div class="about-list">
-      <div class="about-row"><small>VERSION</small><strong>0.2.1</strong></div>
+      <div class="about-row"><small>VERSION</small><strong>0.3.4</strong></div>
       <div class="about-row"><small>SUPPORTED PROJECT IDS</small><strong>25021 · 25022 · 25211</strong></div>
       <div class="about-row"><small>KNOWN MODEL LABELS</small><strong>PMA110 · PMA120 · CPH2841<br><span style="color:var(--muted);font-size:11px">Informational only; firmware may change the model label.</span></strong></div>
       <div class="about-row"><small>KERNEL TARGET</small><strong>6.12.58-android16-6-g7704a1ae279b-ab15213644-4k</strong></div>
+      <div class="about-row"><small>SECOND ROOT BACKEND</small><strong>6.12.69-android16-6-g242e1a07f878-ab15865446-4k<br><span style="color:var(--muted);font-size:11px">CVE-2026-98260 via Shizuku; exact-release match only.</span></strong></div>
     </div>
   </section>
   <section class="card">
@@ -138,7 +151,7 @@ html.light{--bg:#f3f5fa;--top:#ffffff;--card:#ffffff;--card2:#f0f3f9;--line:#d9d
   <div class="sheet">
     <div class="sheet-icon"><svg viewBox="0 0 24 24"><path d="M12 3 21 20H3z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M12 9v5m0 3h.01" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></div>
     <h2>Install GBL chainload?</h2>
-    <p>This writes <b>abl.img</b> to both ABL slots and <b>installed-mode2.efi</b> to EFISP. Type <b>FLASH</b> to enable the final button.</p>
+    <p>This writes <b>abl.img</b> to both ABL slots and <b id="efiPayloadName">installed-mode2.efi</b> to EFISP. Type <b>FLASH</b> to enable the final button.</p>
     <input id="phrase" class="confirm" maxlength="5" placeholder="FLASH" oninput="validatePhrase()">
     <div class="actions"><button class="button" onclick="closeFlashDialog()">Cancel</button><button id="confirmFlash" class="button danger" disabled onclick="flashImages()">Flash now</button></div>
   </div>
@@ -164,7 +177,11 @@ function appendLog(title,result,target='log'){const e=byId(target),lines=['['+ne
 function done(id,on){const e=byId(id);e.classList.toggle('done',on);e.querySelector('.mark').textContent=on?'✓':'○'}
 function updateButtons(){const compatible=device.supported&&device.kernelCompatible;byId('flashButton').disabled=!rootReady||!compatible||flashDone||uninstallDone;byId('rootButton').disabled=rootReady||!compatible||uninstallDone;byId('rootButton').textContent=uninstallDone?'Uninstall pending reboot':(rootReady?'Temporary root available':(flashDone?'Enable root for reboot':'Enable temporary root'));byId('installRebootButton').disabled=!rootReady||!compatible||!flashDone;done('rootStep',compatible&&(rootReady||flashDone));done('flashStep',flashDone);byId('nextCard').classList.toggle('show',flashDone);byId('uninstallRootButton').disabled=rootReady||!compatible;byId('uninstallRootButton').textContent=rootReady?'Temporary root available':(uninstallDone?'Enable root for reboot':'Enable temporary root');byId('uninstallButton').disabled=!rootReady||!compatible||uninstallDone;byId('rebootButton').disabled=!rootReady||!compatible||!uninstallDone;done('uninstallRootStep',compatible&&(rootReady||uninstallDone));done('uninstallFlashStep',uninstallDone);byId('recoveryCard').classList.toggle('show',uninstallDone)}
 function setStatus(result){rootReady=!!result.root&&device.supported&&device.kernelCompatible;if(result.installReady){flashDone=true;uninstallDone=false;localStorage.setItem('x9uFlashDone','1');localStorage.removeItem('x9uUninstallDone')}if(result.uninstallReady){uninstallDone=true;flashDone=false;localStorage.setItem('x9uUninstallDone','1');localStorage.removeItem('x9uFlashDone')}updateButtons()}
-function enableRoot(target='log'){busy(true,'Running temporary-root chain…');X9U.enableRoot(callback(r=>{busy(false);appendLog('Temporary root',r,target);rootReady=!!r.root;updateButtons()}))}
+function runRootBackend(target){busy(true,'Running temporary-root chain…');X9U.enableRoot(callback(r=>{busy(false);appendLog('Temporary root',r,target);rootReady=!!r.root;updateButtons()}))}
+function enableRoot(target='log'){if(device.cve98260Compatible){const s=parse(X9U.shizukuStatus());if(!s.running){appendLog('Temporary root',{message:'Shizuku is not running. Start Shizuku and try again.'},target);return}if(!s.granted){X9U.requestShizuku(callback(r=>{setShizuku(r);if(r.granted)runRootBackend(target);else appendLog('Shizuku permission',r,target)}));return}}runRootBackend(target)}
+function setShizuku(result){byId('shizukuState').textContent=result.running?(result.granted?'Running · permission granted':'Running · permission required'):'Not running';byId('shizukuState').style.color=result.granted?'var(--green)':'var(--amber)';byId('shizukuButton').disabled=!!result.granted;byId('cveCheckButton').disabled=!result.granted||!device.cve98260Compatible}
+function requestShizuku(){X9U.requestShizuku(callback(r=>{setShizuku(r);appendLog('Shizuku permission',r,'cveLog')}))}
+function checkCve98260(){busy(true,'Running CVE-2026-98260 precheck…');X9U.checkCve98260(callback(r=>{busy(false);appendLog('CVE-2026-98260 precheck',r,'cveLog')}))}
 function openFlashDialog(){byId('phrase').value='';validatePhrase();byId('flashDialog').classList.add('show')}
 function closeFlashDialog(){byId('flashDialog').classList.remove('show')}
 function validatePhrase(){byId('confirmFlash').disabled=byId('phrase').value!=='FLASH'}
@@ -183,9 +200,12 @@ const initialLight=localStorage.getItem('x9uLightMode')==='1';byId('lightMode').
 
 const device=parse(X9U.deviceInfo());
 byId('model').textContent=device.model||'Unknown';byId('project').textContent=device.projectId||'Unknown';byId('firmware').textContent=device.firmware||'Unknown';byId('kernel').textContent=device.kernel||'Unknown';
+if(device.cve98260Compatible){byId('rootBackendText').textContent='Run CVE-2026-98260 through Shizuku and verify uid=0';byId('uninstallRootBackendText').textContent='Run CVE-2026-98260 through Shizuku and verify uid=0'}else{byId('rootBackendText').textContent='Run the existing preload backend and verify uid=0';byId('uninstallRootBackendText').textContent='Run the existing preload backend and verify uid=0'}
+byId('efiPayloadName').textContent=device.cve98260Compatible?'CPH2841_17.0.0.101-mode2-fb.efi':'installed-mode2.efi';
 byId('modelDetail').classList.add(device.supported?'good':'bad');byId('projectDetail').classList.add(device.supported?'good':'bad');byId('kernelDetail').classList.add(device.kernelCompatible?'good':'bad');
 byId('headState').textContent=device.supported?(device.kernelCompatible?'X9 Ultra · compatible kernel':'Kernel mismatch'):'Unsupported target';byId('headState').classList.add(device.supported&&device.kernelCompatible?'good':'bad');
 updateButtons();
+setShizuku(parse(X9U.shizukuStatus()));
 busy(true,'Checking temporary root…');X9U.status(callback(r=>{busy(false);setStatus(r);if(!r.preloadOk)appendLog('Payload verification',r)}));
 </script>
 </body>

@@ -6,6 +6,7 @@ import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
@@ -21,9 +22,21 @@ import org.json.JSONObject;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import rikka.shizuku.Shizuku;
+
 public final class MainActivity extends Activity {
     private final ExecutorService worker = Executors.newSingleThreadExecutor();
     private WebView webView;
+    private volatile String pendingShizukuCallback;
+    private final Shizuku.OnRequestPermissionResultListener shizukuPermissionListener =
+            (requestCode, result) -> {
+                if (requestCode != ShizukuOps.PERMISSION_REQUEST) return;
+                String callback = pendingShizukuCallback;
+                pendingShizukuCallback = null;
+                if (callback != null) {
+                    deliver(callback, ShizukuOps.permissionResult(result));
+                }
+            };
 
     @SuppressLint({"SetJavaScriptEnabled", "JavascriptInterface"})
     @Override
@@ -57,10 +70,12 @@ public final class MainActivity extends Activity {
         webView.addJavascriptInterface(new Bridge(), "X9U");
         webView.loadUrl("file:///android_asset/index.html");
         setContentView(webView);
+        Shizuku.addRequestPermissionResultListener(shizukuPermissionListener);
     }
 
     @Override
     protected void onDestroy() {
+        Shizuku.removeRequestPermissionResultListener(shizukuPermissionListener);
         worker.shutdownNow();
         if (webView != null) {
             webView.removeJavascriptInterface("X9U");
@@ -84,6 +99,11 @@ public final class MainActivity extends Activity {
         }
 
         @JavascriptInterface
+        public String shizukuStatus() {
+            return ShizukuOps.permissionStatus();
+        }
+
+        @JavascriptInterface
         public void status(String callback) {
             worker.execute(() -> deliver(callback, RootOps.status(MainActivity.this)));
         }
@@ -91,6 +111,28 @@ public final class MainActivity extends Activity {
         @JavascriptInterface
         public void enableRoot(String callback) {
             worker.execute(() -> deliver(callback, RootOps.enableRoot(MainActivity.this)));
+        }
+
+        @JavascriptInterface
+        public void requestShizuku(String callback) {
+            runOnUiThread(() -> {
+                if (!Shizuku.pingBinder()) {
+                    deliver(callback, ShizukuOps.permissionStatus());
+                    return;
+                }
+                if (Shizuku.checkSelfPermission() == PackageManager.PERMISSION_GRANTED) {
+                    deliver(callback, ShizukuOps.permissionStatus());
+                    return;
+                }
+                pendingShizukuCallback = callback;
+                Shizuku.requestPermission(ShizukuOps.PERMISSION_REQUEST);
+            });
+        }
+
+        @JavascriptInterface
+        public void checkCve98260(String callback) {
+            worker.execute(() -> deliver(callback,
+                    ShizukuOps.checkCve98260(MainActivity.this)));
         }
 
         @JavascriptInterface
